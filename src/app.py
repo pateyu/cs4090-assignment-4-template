@@ -140,6 +140,19 @@ def main():
             st.sidebar.success("✅ All BDD tests passed!")
         else:
             st.sidebar.error("❌ Some BDD tests failed.")
+            
+    if st.sidebar.button("Run Property-Based Tests"):
+        result = subprocess.run(
+            ["pytest", "../tests/test_property.py"],
+            capture_output=True,
+            text=True
+        )
+        st.code(result.stdout)
+        if result.returncode == 0:
+            st.sidebar.success("✅ Property-based tests passed!")
+        else:
+            st.sidebar.error("❌ Some property-based tests failed.")
+
 
 
 
