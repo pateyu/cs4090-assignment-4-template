@@ -21,8 +21,12 @@ def load_tasks(file_path=DEFAULT_TASKS_FILE):
     except FileNotFoundError:
         return []
     except json.JSONDecodeError:
-        # Handle corrupted JSON file
-        print(f"Warning: {file_path} contains invalid JSON. Creating new tasks list.")
+        # Show a visible warning in Streamlit UI if available
+        try:
+            import streamlit as st
+            st.warning(f"{file_path} contains invalid JSON. Starting with a fresh task list.")
+        except ImportError:
+            print(f"Warning: {file_path} contains invalid JSON.")
         return []
 
 def save_tasks(tasks, file_path=DEFAULT_TASKS_FILE):
@@ -48,7 +52,7 @@ def generate_unique_id(tasks):
     """
     if not tasks:
         return 1
-    return max(task["id"] for task in tasks) + 1
+    return max(task.get("id", 0) for task in tasks) + 1
 
 def filter_tasks_by_priority(tasks, priority):
     """
@@ -122,4 +126,20 @@ def get_overdue_tasks(tasks):
         task for task in tasks 
         if not task.get("completed", False) and 
            task.get("due_date", "") < today
+    ]
+def mark_all_tasks_complete(tasks):
+    for task in tasks:
+        task["completed"] = True
+    return tasks
+
+def clear_completed_tasks(tasks):
+    return [task for task in tasks if not task.get("completed", False)]
+
+def filter_urgent_tasks(tasks):
+    today = datetime.now().strftime("%Y-%m-%d")
+    return [
+        task for task in tasks
+        if task.get("priority") == "High"
+        and task.get("due_date", "") <= today
+        and not task.get("completed", False)
     ]
