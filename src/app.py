@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import subprocess
+import os
 from tasks import (
     load_tasks,
     save_tasks,
@@ -9,6 +10,11 @@ from tasks import (
     filter_tasks_by_category,
     generate_unique_id
 )
+
+# Set absolute paths
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # root dir
+TESTS_DIR = os.path.join(BASE_DIR, "tests")
+REPORTS_DIR = os.path.join(BASE_DIR, "reports")
 
 def main():
     st.title("To-Do Application")
@@ -81,12 +87,12 @@ def main():
                 save_tasks(tasks)
                 st.rerun()
 
-    # Test Suite
+    # Test Suite Buttons
     st.sidebar.header("Test Suite")
 
     if st.sidebar.button("Run Unit Tests"):
         result = subprocess.run(
-            ["pytest", "../tests/test_basic.py"],
+            ["pytest", os.path.join(TESTS_DIR, "test_basic.py")],
             capture_output=True,
             text=True
         )
@@ -98,7 +104,7 @@ def main():
 
     if st.sidebar.button("Run Parameterization Test"):
         result = subprocess.run(
-            ["pytest", "../tests/test_advanced.py", "-k", "test_filter_tasks_by_priority_param"],
+            ["pytest", os.path.join(TESTS_DIR, "test_advanced.py"), "-k", "test_filter_tasks_by_priority_param"],
             capture_output=True,
             text=True
         )
@@ -106,7 +112,7 @@ def main():
 
     if st.sidebar.button("Run Mocking Test"):
         result = subprocess.run(
-            ["pytest", "../tests/test_advanced.py", "-k", "test_save_tasks_mock"],
+            ["pytest", os.path.join(TESTS_DIR, "test_advanced.py"), "-k", "test_save_tasks_mock"],
             capture_output=True,
             text=True
         )
@@ -114,15 +120,16 @@ def main():
 
     if st.sidebar.button("Run Coverage Report"):
         result = subprocess.run(
-            ["pytest", "../tests", "--cov=src.tasks", "--cov-report=term-missing"],
+            ["pytest", TESTS_DIR, "--cov=src.tasks", "--cov-report=term-missing"],
             capture_output=True,
             text=True
         )
         st.code(result.stdout)
 
     if st.sidebar.button("Generate HTML Report"):
+        os.makedirs(REPORTS_DIR, exist_ok=True)
         result = subprocess.run(
-            ["pytest", "../tests", "--html=../reports/unit_test_report.html", "--self-contained-html"],
+            ["pytest", TESTS_DIR, "--html=" + os.path.join(REPORTS_DIR, "unit_test_report.html"), "--self-contained-html"],
             capture_output=True,
             text=True
         )
@@ -131,7 +138,7 @@ def main():
 
     if st.sidebar.button("Run BDD Tests"):
         result = subprocess.run(
-            ["pytest", "../tests/feature"],
+            ["pytest", os.path.join(TESTS_DIR, "feature")],
             capture_output=True,
             text=True
         )
@@ -140,10 +147,10 @@ def main():
             st.sidebar.success("✅ All BDD tests passed!")
         else:
             st.sidebar.error("❌ Some BDD tests failed.")
-            
+
     if st.sidebar.button("Run Property-Based Tests"):
         result = subprocess.run(
-            ["pytest", "../tests/test_property.py"],
+            ["pytest", os.path.join(TESTS_DIR, "test_property.py")],
             capture_output=True,
             text=True
         )
@@ -152,9 +159,6 @@ def main():
             st.sidebar.success("✅ Property-based tests passed!")
         else:
             st.sidebar.error("❌ Some property-based tests failed.")
-
-
-
 
 if __name__ == "__main__":
     main()
